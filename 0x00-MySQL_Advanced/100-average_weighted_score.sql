@@ -1,16 +1,15 @@
 -- creates stored procedure ComputeAverageWeightedScoreForUsers
-DROP PROCEDURE IF EXISTS ComputeAverageWeightedScoreForUsers;
-DELIMITER |
-CREATE PROCEDURE ComputeAverageWeightedScoreForUsers()
+DROP PROCEDURE IF EXISTS ComputeAverageWeightedScoreForUser;
+DELIMITER $$
+CREATE PROCEDURE ComputeAverageWeightedScoreForUser(user_id INT)
 BEGIN
-  UPDATE users AS U, 
-    (SELECT U.id, SUM(score * weight) / SUM(weight) AS w_avg 
-    FROM users AS U 
-    JOIN corrections as C ON U.id=C.user_id 
-    JOIN projects AS P ON C.project_id=P.id 
-    GROUP BY U.id)
-  AS WA
-  SET U.average_score = WA.w_avg 
-  WHERE U.id=WA.id;
-END;
-|
+    DECLARE w_avg_score FLOAT;
+    SET w_avg_score = (SELECT SUM(score * weight) / SUM(weight) 
+                        FROM users AS U 
+                        JOIN corrections as C ON U.id=C.user_id 
+                        JOIN projects AS P ON C.project_id=P.id 
+                        WHERE U.id=user_id);
+    UPDATE users SET average_score = w_avg_score WHERE id=user_id;
+END
+$$
+DELIMITER ;
