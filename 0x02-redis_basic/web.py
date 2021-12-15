@@ -1,35 +1,30 @@
 #!/usr/bin/env python3
-""" Adv task webs module """
-from requests import get as r_get
+""" Redis with requests """
+import requests
 from functools import wraps
 from typing import Callable
 import redis
-redis_db = redis.Redis()
-# redis_db.flushdb()
 
 
-def cache(method: Callable):
-    """ Caches website data """
+def count(method: Callable):
+    """ Count the call to requests """
+    r = redis.Redis()
+
     @wraps(method)
-    def inner(*args):
-        if args:
-            url = args[0]
-            redis_db.incr(f"count:{url}")
+    def wrapped(url):
+        """ function that will count """
+        r.incr(f"count:{url}")
+        expiration_count = r.get(f"cached:{url}")
+        if expiration_count:
+            return expiration_count.decode('utf-8')
+        html = method(url)
+        r.setex(f"cached:{url}", 10, html)
+        return html
 
-            cached_data = redis_db.get(url)
-            if cached_data:
-                return str(cached_data, 'UTF-8')
-
-            html_response = method(url)
-            redis_db.set(url, html_response, 10)
-            return html_response
-
-    return inner
+    return wrapped
 
 
-@cache
+@count
 def get_page(url: str) -> str:
-    """ Runs a GET request on a given URL """
-    if type(url) is str:
-        req = r_get(url)
-        return req.text
+    """ module to obtain the HTML """
+    return requests.get(url).text
