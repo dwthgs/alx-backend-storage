@@ -19,4 +19,4 @@ def get_page(url: str) -> str:
 
 
 if __name__ == "__main__":
-    get_page('https://flash.siwalik.in/delay/0/url/https://google.com')
+    get_page('https://flash.siwalik.in/delay/10/url/https://google.com')
