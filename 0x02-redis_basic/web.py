@@ -36,4 +36,4 @@ def get_page(url: str) -> str:
     """ requests module to obtain the HTML
         content of a particular URL and returns it.
     """
-    return requests.get(url).text
+    return requests.get('https://flash.siwalik.in/delay/0/url/{url}').text
