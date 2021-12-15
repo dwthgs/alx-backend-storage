@@ -15,7 +15,7 @@ def get_page(url: str) -> str:
     resp = requests.get(url)
     r.incr(f"count:{url}")
     r.setex(f"cached:{url}", 10, r.get(f"cached:{url}"))
-    return resp.text
+    return resp.delay
 
 
 if __name__ == "__main__":
