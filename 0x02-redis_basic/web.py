@@ -15,8 +15,8 @@ def get_page(url: str) -> str:
     resp = requests.get(url)
     r.incr(f"count:{url}")
     r.setex(f"cached:{url}", 10, r.get(f"cached:{url}"))
-    return resp.delay
+    return resp.text
 
 
 if __name__ == "__main__":
-    get_page('https://flash.siwalik.in/delay/10')
+    get_page('https://flash.siwalik.in/delay/0/url/https://google.com')
