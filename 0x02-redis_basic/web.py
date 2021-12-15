@@ -1,40 +1,35 @@
 #!/usr/bin/env python3
-""" Advanced - Module for Implementing an expiring
-    web cache and tracker
-"""
-
-import redis
-import requests
-from typing import Callable
+""" Adv task webs module """
+from requests import get as r_get
 from functools import wraps
+from typing import Callable
+import redis
+redis_db = redis.Redis()
+# redis_db.flushdb()
 
-rd = redis.Redis()
 
-
-def count_requests(method: Callable) -> Callable:
-    """ Counting with decorators how many times a request
-        has been made
-    """
-
+def cache(method: Callable):
+    """ Caches website data """
     @wraps(method)
-    def wrapper(url):
-        """ Wrapper for decorator functionality """
-        rd.incr(f"count:{url}")
-        cached_html = rd.get(f"cached:{url}")
-        if cached_html:
-            return cached_html.decode('utf-8')
+    def inner(*args):
+        if args:
+            url = args[0]
+            redis_db.incr(f"count:{url}")
 
-        html = method(url)
-        rd.setex(f"cached:{url}", 10, html)
-        return html
+            cached_data = redis_db.get(url)
+            if cached_data:
+                return str(cached_data, 'UTF-8')
 
-    return wrapper
+            html_response = method(url)
+            redis_db.set(url, html_response, 10)
+            return html_response
+
+    return inner
 
 
-@count_requests
+@cache
 def get_page(url: str) -> str:
-    """ requests module to obtain the HTML
-        content of a particular URL and returns it.
-    """
-    req = requests.get(url)
-    return req.text
+    """ Runs a GET request on a given URL """
+    if type(url) is str:
+        req = r_get(url)
+        return req.text
